@@ -1918,3 +1918,226 @@ MariaDB [Retail1]> select * from customer where rating > (select avg(rating) fro
 
 2 rows in set (0.00 sec)
 ============================================82
+114.Which customers have above average orders? 
+
+MariaDB [Retail1]> select c.cnum,c.cname,o.onum,o.amt,odate from customer c join orders o on c.cnum=o.cnum group by cnum having amt > (select avg(amt) from orders);
+
++------+---------+------+---------+------------+
+
+| cnum | cname   | onum | amt     | odate      |
+
++------+---------+------+---------+------------+
+
+| 2003 | Liu     | 3005 | 5160.45 | 1996-03-10 |
+
+| 2006 | Clemens | 3008 | 4723.00 | 1996-05-10 |
+
++------+---------+------+---------+------------+
+
+2 rows in set (0.00 sec)
+==========================================83
+8. Find the names and numbers of all salespeople who had more than one customer. 
+
+
+MariaDB [Retail1]> select s.snum,s.sname,count(c.cnum) as Count from salespeople s join customer c on s.snum=c.snum group by sname having count>1;
+
++------+--------+-------+
+
+| snum | sname  | Count |
+
++------+--------+-------+
+
+| 1001 | Peel   |     2 |
+
+| 1002 | Serres |     2 |
+
++------+--------+-------+
+
+2 rows in set (0.00 sec)
+===========================================84
+9. Count the orders of each of the salespeople and output the results in descending order. 
+
+MariaDB [Retail1]> select s.snum,s.sname,c.cnum,count(o.onum) as Orders from salespeople s join customer c join orders o on s.snum=c.snum and c.cnum=o.cnum group by s.sname order by Orders desc;
+ 
++------+---------+------+--------+
+
+| snum | sname   | cnum | Orders |
+
++------+---------+------+--------+
+
+| 1001 | Peel    | 2001 |      3 |
+
+| 1002 | Serres  | 2003 |      2 |
+
+| 1003 | Motika  | 2002 |      2 |
+
+| 1004 | AxelRod | 2007 |      2 |
+
+| 1007 | Rifkin  | 2008 |      2 |
+
++------+---------+------+--------+
+
+5 rows in set (0.00 sec)
+======================================85
+17. Give the sums of the amounts from the Orders table, grouped by date, eliminating all those 
+dates where the SUM was not at least 2000.00 above the MAX amount.
+
+MariaDB [Retail1]> select onum,sum(amt) as Sum from orders group by odate having Sum > 2000;
+
++------+----------+
+
+| onum | Sum      |
+
++------+----------+
+
+| 3001 |  8944.59 |
+
+| 3008 |  4723.00 |
+
+| 3010 | 11201.83 |
+
++------+----------+
+
+3 rows in set (0.00 sec)
+=====================================86
+18. Select all orders that had amounts that were greater than at least one of the orders from 
+October 6. 
+
+MariaDB [Retail1]> select onum,amt,odate from orders where amt>(select min(amt) from orders where odate='1996-06-10');
+
++------+---------+------------+
+
+| onum | amt     | odate      |
+
++------+---------+------------+
+
+| 3002 | 1900.10 | 1996-03-10 |
+
+| 3005 | 5160.45 | 1996-03-10 |
+
+| 3008 | 4723.00 | 1996-05-10 |
+
+| 3009 | 1713.23 | 1996-04-10 |
+
+| 3011 | 9891.88 | 1996-06-10 |
+
++------+---------+------------+
+
+5 rows in set (0.00 sec)
+==================================87
+41. Find all orders with amounts smaller than any amount for a customer in San Jose. 
+
+MariaDB [Retail1]> select c.cnum,c.cname,o.onum,o.amt from customer c join orders o on c.cnum=o.cnum where o.amt<(select max(o.amt) from customer c join orders o on c.cnum=o.cnum where c.city='San Jose');
+
++------+-----------+------+---------+
+
+| cnum | cname     | onum | amt     |
+
++------+-----------+------+---------+
+
+| 2008 | Cisnerous | 3001 |   18.69 |
+
+| 2007 | Pereira   | 3002 | 1900.10 |
+
+| 2001 | Hoffman   | 3003 |  767.19 |
+
+| 2008 | Cisnerous | 3006 | 1098.16 |
+
+| 2002 | Giovanni  | 3007 |   75.75 |
+
+| 2006 | Clemens   | 3008 | 4723.00 |
+
+| 2002 | Giovanni  | 3009 | 1713.23 |
+
+| 2004 | Grass     | 3010 | 1309.95 |
+
+| 2007 | Pereira   | 3012 |    0.00 |
+
++------+-----------+------+---------+
+
+9 rows in set (0.00 sec)
+================================89
+20. Find all pairs of customers having the same rating. 
+
+MariaDB [Retail1]> select * from customer order by rating;
+
++------+-----------+----------+--------+------+
+
+| cnum | cname     | city     | rating | snum |
+
++------+-----------+----------+--------+------+
+
+| 2001 | Hoffman   | London   |    100 | 1001 |
+
+| 2006 | Clemens   | London   |    100 | 1001 |
+
+| 2007 | Pereira   | Rome     |    100 | 1004 |
+
+| 2002 | Giovanni  | Rome     |    200 | 1003 |
+
+| 2003 | Liu       | San Jose |    200 | 1002 |
+
+| 2004 | Grass     | Berlin   |    300 | 1002 |
+
+| 2008 | Cisnerous | SAn Jose |    300 | 1007 |
+
++------+-----------+----------+--------+------+
+
+7 rows in set (0.00 sec)
+=============================90
+21. Find all customers whose CNUM is 1000 above the SNUM of Serres. 
+
+MariaDB [Retail1]> select * from customer where cnum>(select (1000+snum) from salespeople where sname='Serres');
+
++------+-----------+----------+--------+------+
+
+| cnum | cname     | city     | rating | snum |
+
++------+-----------+----------+--------+------+
+
+| 2003 | Liu       | San Jose |    200 | 1002 |
+
+| 2004 | Grass     | Berlin   |    300 | 1002 |
+
+| 2006 | Clemens   | London   |    100 | 1001 |
+
+| 2007 | Pereira   | Rome     |    100 | 1004 |
+
+| 2008 | Cisnerous | SAn Jose |    300 | 1007 |
+
++------+-----------+----------+--------+------+
+
+5 rows in set (0.00 sec)
+==============================91
+38. Write a select command using a corelated subquery that selects the names and numbers of all 
+customers with ratings equal to the maximum for their city. 
+
+
+MariaDB [Retail1]> select cnum,cname ,city,rating from customer where rating in (select  max(rating) from customer group by city);
+
++------+-----------+----------+--------+
+
+| cnum | cname     | city     | rating |
+
++------+-----------+----------+--------+
+
+| 2001 | Hoffman   | London   |    100 |
+
+| 2002 | Giovanni  | Rome     |    200 |
+
+| 2003 | Liu       | San Jose |    200 |
+
+| 2004 | Grass     | Berlin   |    300 |
+
+| 2006 | Clemens   | London   |    100 |
+
+| 2007 | Pereira   | Rome     |    100 |
+
+| 2008 | Cisnerous | SAn Jose |    300 |
+
++------+-----------+----------+--------+
+
+7 rows in set (0.00 sec)
+
+===============================92
+
